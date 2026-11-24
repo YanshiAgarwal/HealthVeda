@@ -1,0 +1,20 @@
+# FULL mode: best search quality + server-side OCR. Used for local runs and Docker.
+# (Too big for serverless hosting - Vercel uses requirements.txt only.)
+-r requirements.txt
+
+# ── Re-ranked RAG search (torch is ~1-2 GB) ──
+langchain-community>=0.2.0
+langchain-core>=0.2.0
+langchain-text-splitters>=0.2.0
+chromadb>=0.4.24
+sentence-transformers>=2.7.0
+torch>=2.2.0
+pandas>=2.2.0
+
+# ── Server-side OCR / computer vision ──
+pypdfium2>=4.30.0
+pillow>=10.4.0
+opencv-python-headless>=4.10.0
+pytesseract>=0.3.13   # needs the Tesseract program (see README)
+rapidocr>=3.0.0       # pure-pip OCR fallback
+onnxruntime>=1.18.0

@@ -1,0 +1,76 @@
+# HealthVeda - production deployment
+#   1. cp .env.docker.example .env   and fill in the secrets
+#   2. docker compose up -d --build
+#   3. Put HTTPS in front (nginx / Caddy / your cloud's load balancer) -> port 5000
+#
+# Network design: only the "web" service is reachable from outside.
+# MongoDB and the AI service live on an internal network with no public ports.
+
+services:
+  web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/healthveda?authSource=admin
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      DATA_ENCRYPTION_KEY: ${DATA_ENCRYPTION_KEY}
+      DATA_ENCRYPTION_KEY_ID: ${DATA_ENCRYPTION_KEY_ID:-k1}
+      AI_SERVICE_URL: http://ai:8000
+      AI_SERVICE_KEY: ${AI_SERVICE_KEY}
+      CLIENT_ORIGINS: ${PUBLIC_URL}
+      TRUST_PROXY: 1
+    depends_on:
+      mongo:
+        condition: service_healthy
+      ai:
+        condition: service_started
+    networks: [public, internal]
+    read_only: true
+    tmpfs: [/tmp]
+    security_opt: ["no-new-privileges:true"]
+
+  ai:
+    build: ./ai-service
+    restart: unless-stopped
+    environment:
+      APP_ENV: production
+      AI_SERVICE_KEY: ${AI_SERVICE_KEY}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      GROQ_MODEL: ${GROQ_MODEL:-openai/gpt-oss-120b}
+      USE_RAG: "true"
+    volumes:
+      - ai-models:/app/.cache   # downloaded embedding/OCR models survive restarts
+    # internal: talks to the web server; egress: outbound only (Groq API, model downloads).
+    # No ports are published, so nothing outside can connect to it.
+    networks: [internal, egress]
+    security_opt: ["no-new-privileges:true"]
+
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo-data:/data/db
+    networks: [internal]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    security_opt: ["no-new-privileges:true"]
+
+networks:
+  public:
+  egress:
+  internal:
+    internal: true   # no internet access in or out (MongoDB lives only here)
+
+volumes:
+  mongo-data:
+  ai-models:

@@ -1,0 +1,7 @@
+# Optional: terminal voice chat + phone-call mode (cli/voice_chat.py, cli/phone_call_server.py)
+-r requirements.txt
+sarvamai>=0.1.0
+sounddevice>=0.4.6
+pydub>=0.25.1
+twilio>=9.0.0
+audioop-lts>=0.2.1; python_version >= "3.13"

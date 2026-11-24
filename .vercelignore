@@ -1,0 +1,13 @@
+# Never upload local environments, secrets or caches to Vercel
+**/node_modules
+**/venv
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.cache
+**/.env
+client/dist
+client/public/ocr
+ai-service/vector_db
+*.log
+Synopsis_HealthVeda.pdf

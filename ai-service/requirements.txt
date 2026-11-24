@@ -1,0 +1,11 @@
+# HealthVeda AI service - LIGHT core (this is what Vercel installs)
+#   Local "full" mode (torch re-ranker + server OCR):  pip install -r requirements-full.txt
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-multipart>=0.0.18
+python-dotenv>=1.0.1
+groq>=0.9.0
+pypdf>=5.0.0          # text from digital PDFs (pure Python)
+numpy>=1.26.0
+rank-bm25>=0.2.2      # keyword search
+fastembed>=0.5.0      # ONNX embeddings (same BGE model, no torch)
